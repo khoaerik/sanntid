@@ -222,7 +222,7 @@ func Fsm(){
                             ackMsg.Ack = true
                             ackMsg.Button.Floor = lastOrder.Pushed.Floor
                             ackMsg.Button.Button = lastOrder.Pushed.Button
-                            for i :=0; i<5; i++{
+                            for i :=0; i<10; i++{
                                 ch.AckTxCh <- *ackMsg
                             }
                         }
@@ -240,7 +240,7 @@ func Fsm(){
                         state="moving"
 
                     }
-                    for i :=0; i<5; i++{
+                    for i :=0; i<10; i++{
                         ch.ElevStatusTxCh <- *statusMsg
                     }
                     watchDog.Reset(15*time.Second)
