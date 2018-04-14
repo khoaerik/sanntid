@@ -85,7 +85,7 @@ func Fsm(){
     timer := time.NewTimer(3*time.Second)
     timer.Stop()
 
-    watchDog := time.NewTimer(15*time.Second)
+    watchDog := time.NewTimer(4*time.Second)
     watchDog.Stop()
 
 
@@ -153,6 +153,9 @@ func Fsm(){
 
     for {
         
+        /*if lastOrder.Pushed.Floor == lastFloor {
+            watchDog.Reset(4*time.Second)
+        }*/
         
 
         fmt.Printf("ORDERS: %v\n",orders)
@@ -225,6 +228,7 @@ func Fsm(){
                         }
 
                         timer.Reset(3*time.Second)
+
                         elevio.SetDoorOpenLamp(true)
                         elevio.SetMotorDirection(elevio.MD_Stop)
                         state = "doorOpen"
@@ -239,6 +243,7 @@ func Fsm(){
                     for i :=0; i<5; i++{
                         ch.ElevStatusTxCh <- *statusMsg
                     }
+                    watchDog.Reset(15*time.Second)
             }
 
 
@@ -374,7 +379,7 @@ func Fsm(){
 
 
         case currentFloor := <- drv_floors:
-
+            watchDog.Stop()
       		lastFloor = currentFloor
             lastOrder = nearestOrder
             nearestOrder=queue.NearestOrder(orders, lastFloor, dirn)
@@ -415,6 +420,7 @@ func Fsm(){
             	case "idle":
 
 
+
             	case "doorOpen":
 
                 case "motorStop":
@@ -434,8 +440,9 @@ func Fsm(){
             		}
 
             		elevio.SetMotorDirection(dirn)
-                    
+
             		if lastOrder.Pushed.Floor == lastFloor{
+
                         fmt.Println("REMOVE NOW")
 
                         elevio.SetDoorOpenLamp(true)
@@ -463,7 +470,7 @@ func Fsm(){
                         
                     } else {
                         state="moving"
-                        
+                        watchDog.Reset(4*time.Second)
         				dirn=chooseDir(nearestOrder.Pushed.Floor,lastFloor)
                         direction = chooseStringDir(nearestOrder.Pushed.Floor,lastFloor)
                         elevio.SetMotorDirection(dirn)
@@ -472,7 +479,8 @@ func Fsm(){
                     for i :=0; i<5; i++{
                         ch.ElevStatusTxCh <- *statusMsg
                     }
-                    watchDog.Reset(10*time.Second)
+                    
+                   
         		}
 
 		        	
@@ -515,6 +523,7 @@ func Fsm(){
     		}
         
         case <- watchDog.C:
+            fmt.Println("WATCHDOG TIMED OUT")
             enablePeerTransmitter <- false
             state = "motorStop"
             /*if motorstopp {
